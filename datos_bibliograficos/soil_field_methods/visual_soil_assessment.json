@@ -1,0 +1,49 @@
+{
+  "archivo": "visual_soil_assessment.pdf",
+  "paginas": 504,
+  "paginas_extraidas": 5,
+  "texto_muestra": [
+    "V I S U A L S O I L A S S E S S M E N T\nVSA\nField Guides\nV\nI\nS\nU\nA\nL\nS\nO\nI\nL\nA\nS\nS\nE\nS\nS\nM\nE\nN\nT\n—\nF\nI\nE\nL\nD\nG\nU\nI\nD\nE\nS",
+    "VISUAL SOIL ASSESSMENT\nAnnual\nCrops\nE\nD\nI\nU\nG\nD\nL\nE\nI\nF\nThe present publication on Visual Soil Assessmentis a practical\nguide to carry out a quantitative soil analysis with reproduceable results\nusing only very simple tools. Besides soil parameters, also crop parameters\nfor assessing soil conditions are presented for some selected crops. The\nVisual Soil Assessmentmanuals consist of a series of separate booklets for\nspecific crop groups, collected in a binder. The publication addresses\nscientists as well as field technicians and even farmers who want to analyse\ntheir soil condition and observe changes over time.\nISBN 978-92-5-105941-8\n9 789251 059418\nTC/D/I0007E/1/02.08/1000",
+    "VISUAL SOIL ASSESSMENT\nAnnual\nCrops\nE\nD\nI\nU\nG\nD\nL\nE\nI\nF\nGraham Shepherd, soil scientist,\nBioAgriNomics.com, New Zealand\nFabio Stagnari, assistant researcher,\nUniversity of Teramo, Italy\nMichele Pisante, professor,\nUniversity of Teramo, Italy\nJosé Benites, technical officer,\nLand and Water Development Division, FAO\nFood and Agriculture Organization of the United Nations\nRome, 2008"
+  ],
+  "num_tablas": 2,
+  "tablas_muestra": [
+    [
+      [
+        null,
+        "V\nI\nS\nU\nA\nL\nS\nO\nI\nL\nA\nS\nS\nE\nS\nS\nM\nE\nN\nT\n—\nF\nI\nE\nL\nD\nG\nU\nI\nD\nE\nS",
+        "V I S U A L S O I L A S S E S S M E N T\nVSA\nField Guides"
+      ]
+    ],
+    [
+      [
+        "The present publication on Visual Soil Assessmentis a practical\nguide to carry out a quantitative soil analysis with reproduceable results\nusing only very simple tools. Besides soil parameters, also c",
+        "VISUAL SOIL ASSESSMENT\nE\nD\nI\nAnnual\nU\nCrops\nG\nD\nL\nE\nI\nF",
+        null,
+        "VISUAL SOIL ASSESSMENT",
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ]
+  ],
+  "parametros_mencionados": [
+    "dres",
+    "ph",
+    "vsa"
+  ],
+  "estado": "extraido"
+}

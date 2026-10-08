@@ -1,0 +1,16 @@
+# Entorno virtual y caché Python (no versionar)
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+
+# Entorno local (secretos: copiar .env.example a .env)
+.env
+
+# Logs y caché de editores
+*.log
+.vscode/
+.idea/
+.DS_Store

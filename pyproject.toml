@@ -1,0 +1,9 @@
+[project]
+name = "agroappbknd"
+version = "0.1.0"
+description = "AgroApp backend: FastAPI + PostGIS MAGNA-SIRGAS EPSG:4686"
+requires-python = ">=3.11"
+dependencies = ["fastapi"]
+
+[tool.alembic]
+script_location = "alembic"

@@ -1,0 +1,27 @@
+{
+  "archivo": "guia_para_la_evaluacion_visual_de_la_calidad_del_suelo.pdf",
+  "paginas": 44,
+  "paginas_extraidas": 5,
+  "texto_muestra": [
+    "Guía para la\nevaluación visual\nde la calidad del suelo\nElke Noellemeyer\nLucila Álvarez, Emmanuel Leizica, Florencia Gómez\nCátedra de Edafología y Manejo de Suelos\nFacultad de Agronomía\nUniversidad Nacional de La Pampa\nAlberto Quiroga\nRomina Fernández, Ileana Frasier, Cristian Álvarez\nINTA Anguil, La Pampa\n2021\nAdaptado de: Shepherd, T. G., Stagnari, F., Pisante, M. and Benites, J. 2008.\nVisual Soil Assessment – Field guide for annual crops. FAO, Rome, Italy.",
+    "Introducción\nEl mantenimiento de la buena calidad del suelo es vital para la sustentabilidad am-\nbiental y económica de los sistemas de producción agropecuarios. Las pérdidas en la\ncalidad del mismo tienen un impacto marcado en el rendimiento y la calidad de los\ncultivos, aumentan los costos de producción e incrementan el riesgo de erosión. La\ndegradación de las propiedades físicas del suelo tiene un impacto importante sobre\nel ambiente y los servicios ecosistémicos y su restauración requiere un tiempo y un\ncosto considerable. Salvaguardar los recursos del suelo para las generaciones futuras\ny minimizar la huella ecológica de los cultivos anuales son tareas importantes para los\nque toman las decisiones sobre el uso de la tierra y el manejo de los cultivos.\nA menudo, no se presta suficiente atención a:\n•\nel rol fundamental de la calidad del suelo en una producción eficiente y\nsostenida;\n•\nel efecto de la condición del suelo sobre la productividad y el beneficio\neconómico;\n•\nla planificación a largo plazo, necesaria para mantener una buena cali-\ndad del suelo;\n•\nel efecto de las decisiones de manejo de la tierra y de los cultivos sobre\nla calidad del suelo.\nEl tipo de suelo y el efecto del manejo sobre la condición de este son determinantes\nimportantes de la productividad de las tierras. Los profesionales agrónomos necesitan\nherramientas que sean confiables, rápidas y fáciles de usar para evaluar la condición\nde sus suelos y su idoneidad para distintos sistemas de producción y tipos de cultivos.\nEstas herramientas son imprescindibles para decisiones sobre estrategias de manejo\ninformadas que conducirán a una gestión sustentable de la producción agropecuaria.\nLa Evaluación Visual del Suelo (EVS) proporciona un método rápido y simple para\nevaluar la condición del recurso e identificar limitantes para el rendimiento de los\ncultivos. También se puede utilizar para evaluar la idoneidad y las limitaciones de un\nsuelo para cultivos anuales. Los suelos con buenos puntajes generalmente darán la\nmejor producción con los menores costos de insumos externos.\n2\n Guía para la evaluación visual de la calidad del suelo",
+    "El método EVS\nLa evaluación visual del suelo se basa en la observación y valoración del estado de\nvariables clave del suelo y del rendimiento de los cultivos a través de indicadores de\nla calidad del mismo, las cuales se presentan en un cuadro sinóptico. Con la excepción\nde la textura del suelo, los indicadores son dinámicos, es decir, capaces de cambiar\nbajo diferentes manejos y usos de suelo, y reflejan las presiones por el uso de la tierra.\nAl ser sensibles a las presiones de distintas prácticas de manejo , son indicadores de\nalerta temprana de cambios en la condición del suelo y, como tal, proporcionan una\nherramienta de seguimiento y monitoreo eficaz.\nPuntuación visual\nA cada indicador se le asigna una puntuación visual de 0 (pobre), 1 (moderado) o 2\n(bueno), según la calidad del suelo observada al comparar una muestra del mismo con\ntres fotografías de los distintos estados del parámetro observado, presentadas en la\nguía de campo. La puntuación es flexible, por lo que, si la muestra que se está evaluan-\ndo no se alinea claramente con ninguna de las fotografías, pero se encuentra entre\ndos, se puede dar una puntuación intermedia, es decir, 0,5 o 1,5.\nDebido a que algunos indicadores del suelo son relativamente más importantes en\nla evaluación de la calidad del mismo que otros, la EVS proporciona distintos factores\nde ponderación (1, 2 y 3). La suma de las clasificaciones da el total del puntaje del índi-\nce de calidad del suelo para la muestra que se está evaluando. Comparando esto con la\nescala de calificación en la parte inferior de la ficha de puntuación, se determina si el\nsuelo está en buenas, moderadas o malas condiciones.\n3\nGuía para la evaluación visual de la calidad del suelo "
+  ],
+  "num_tablas": 1,
+  "tablas_muestra": [
+    [
+      [
+        "Guía para la\nevaluación visual\nde la calidad del suelo"
+      ],
+      [
+        "Elke Noellemeyer\nLucila Álvarez, Emmanuel Leizica, Florencia Gómez\nCátedra de Edafología y Manejo de Suelos\nFacultad de Agronomía\nUniversidad Nacional de La Pampa\nAlberto Quiroga\nRomina Fernández, Ile"
+      ]
+    ]
+  ],
+  "parametros_mencionados": [
+    "calcio",
+    "ph",
+    "textura"
+  ],
+  "estado": "extraido"
+}
