@@ -11,7 +11,10 @@ shapely==2.0.6
 pyproj==3.6.1
 rasterio==1.3.10
 xarray==2024.10.0
-richdem==2.3.0
+# richdem: dependencia FUTURA (pendiente/RUSLE, marcado PRÓXIMO en la UI).
+# No instalar: la versión 2.3.0 no existe en PyPI y el código aún no lo importa
+# (ver aplicacion/rutas/analisis.py TODO). Cuando se implemente, usar conda
+# (conda-forge: richdem) o compilar contra GDAL, no pip.
 requests==2.32.3
 weasyprint==62.3
 python-multipart==0.0.12
