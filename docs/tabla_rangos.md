@@ -15,3 +15,9 @@ Fuente: `src/*.pdf`. Regla: ningún valor sin `fuente`.
 Decisión diseño: motor puro en `aplicacion/servicios/motor_diagnostico.py`,
 sin ML. El técnico acepta/rechaza/edita (ver `TarjetaDiagnostico.tsx`).
 Estrategias también inmutables (`modelos/estrategia.py`).
+
+Panel extendido (plan "Determina las características de tu suelo"):
+la ficha acepta ~40 variables (físicas/químicas/biológicas, campo/lab),
+pero el motor SOLO interpreta estas 7. El resto se registra como serie
+temporal sin interpretar hasta validar sus rangos contra `src/`.
+Ver `sql/migracion_fichas_extendidas.sql` para bases existentes.
