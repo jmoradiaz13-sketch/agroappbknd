@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .configuracion import configuracion
-from .rutas import predios, fichas_suelo, analisis, diagnostico, informes, lotes, auth, referencias_monitoreo
+from .rutas import predios, fichas_suelo, analisis, diagnostico, informes, lotes, auth, referencias_monitoreo, disenos, fotos
 
 app = FastAPI(title="AgroForestapp API", description="Gestión de fincas y suelos MAGNA-SIRGAS EPSG:4686", version="0.1.0")
 
@@ -23,6 +23,8 @@ app.include_router(lotes.enrutador)
 app.include_router(auth.enrutador)
 app.include_router(referencias_monitoreo.enrutador_ref)
 app.include_router(referencias_monitoreo.enrutador_mon)
+app.include_router(disenos.enrutador)
+app.include_router(fotos.enrutador)
 
 
 @app.get("/")
