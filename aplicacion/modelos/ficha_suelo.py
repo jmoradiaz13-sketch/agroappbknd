@@ -52,6 +52,7 @@ class FichaSuelo(Base):
     limo_pct = Column(Float, nullable=True)
     arcilla_pct = Column(Float, nullable=True)
     estructura = Column(String(100), nullable=True)
+    estructura_vess = Column(Integer, nullable=True)  # 1-5 Ball et al.
     densidad_aparente = Column(Float, nullable=True)
     porosidad_pct = Column(Float, nullable=True)
     capacidad_campo_pct = Column(Float, nullable=True)
@@ -59,6 +60,10 @@ class FichaSuelo(Base):
     compactacion = Column(String(100), nullable=True)
     infiltracion = Column(String(100), nullable=True)
     color_munsell = Column(String(50), nullable=True)
+    munsell_h = Column(String(10), nullable=True)
+    munsell_v = Column(Float, nullable=True)
+    munsell_c = Column(Float, nullable=True)
+    color_estado = Column(String(20), nullable=True)  # humedo|seco
     pedregosidad = Column(String(100), nullable=True)
     profundidad_efectiva_cm = Column(Float, nullable=True)
     # Químico campo

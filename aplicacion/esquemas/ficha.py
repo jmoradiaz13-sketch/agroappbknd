@@ -15,11 +15,16 @@ class FichaSueloCrear(BaseModel):
     compactacion: str | None = Field(default=None, max_length=100)
     infiltracion: str | None = Field(default=None, max_length=100)
     estructura: str | None = Field(default=None, max_length=100)
+    estructura_vess: int | None = Field(default=None, ge=1, le=5)
     densidad_aparente: float | None = Field(default=None, ge=0, le=3)
     porosidad_pct: float | None = Field(default=None, ge=0, le=100)
     capacidad_campo_pct: float | None = Field(default=None, ge=0, le=100)
     pmp_pct: float | None = Field(default=None, ge=0, le=100)
     color_munsell: str | None = Field(default=None, max_length=50)
+    munsell_h: str | None = Field(default=None, max_length=10)
+    munsell_v: float | None = Field(default=None, ge=0, le=10)
+    munsell_c: float | None = Field(default=None, ge=0, le=10)
+    color_estado: str | None = Field(default=None, max_length=20)
     profundidad_efectiva_cm: float | None = Field(default=None, ge=0, le=300)
     # Químicas campo
     ph_campo: float | None = Field(default=None, ge=0, le=14)
@@ -58,9 +63,10 @@ class FichaSueloCrear(BaseModel):
     carbono_biomasa_microbiana: float | None = Field(default=None, ge=0, le=10000)
     micorrizas: str | None = Field(default=None, max_length=100)
     cobertura_vegetal_pct: float | None = Field(default=None, ge=0, le=100)
-    referencia_bibliografica: str = Field(
-        min_length=3,
-        description="Fuente en src/, ej: guia_para_la_evaluacion_de_la_calidad_y_salud_del_suelo.pdf p.12"
+    referencia_bibliografica: str | None = Field(
+        default=None,
+        max_length=300,
+        description="Fuente registrada (opcional, se cuadra después)"
     )
 
 
