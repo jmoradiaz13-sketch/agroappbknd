@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from ..configuracion import configuracion
 from ..servicios import sig_igac
+from ..servicios import upra
 
 enrutador = APIRouter(prefix="/sig", tags=["sig"])
 
@@ -96,3 +97,40 @@ def crear_precarga(solicitud: SolicitudPrecarga):
     except ValueError as e:
         raise HTTPException(400, str(e))
     return sig_igac.plan_precarga(solicitud.predio_identificador.strip(), caja, solicitud.capas)
+
+
+@enrutador.get("/upra-frontera")
+def upra_frontera(
+    municipio: str,
+    modo: str = Query("real", pattern="^(real|demo)$"),
+):
+    """Frontera agrícola del municipio (ha por tipo). Aptitud A1/A2/A3: ver SIPRA."""
+    if not municipio.strip():
+        raise HTTPException(400, "El municipio es obligatorio")
+    if modo == "demo":
+        demo = upra.DEMO
+        return {
+            "municipio": demo["municipio"],
+            "no_condicionada_ha": demo["no_condicionada_ha"],
+            "condicionada_ha": demo["condicionada_ha"],
+            "total_ha": round(demo["no_condicionada_ha"] + demo["condicionada_ha"], 1),
+            "pct_en_frontera": 100.0,
+            "lectura": "Mayoría condicionada (demo): valida restricciones antes de sembrar.",
+            "insignia": "MIXTO",
+            "fuente": f"{upra.FUENTE} (demo offline)",
+            "aptitud_sipra": upra.URL_SIPRA,
+            "nota": "SIPRA es indicativo, no predial: confirma aptitud por cultivo allí.",
+        }
+    try:
+        datos = upra.frontera_municipio(municipio)
+    except requests.RequestException as e:
+        raise HTTPException(502, f"UPRA no disponible ahora, usa modo=demo o reintenta en oficina: {e}")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {
+        **datos,
+        "insignia": "MIXTO",
+        "fuente": upra.FUENTE,
+        "aptitud_sipra": upra.URL_SIPRA,
+        "nota": "SIPRA es indicativo, no predial: confirma aptitud A1/A2/A3 por cultivo allí.",
+    }

@@ -3,7 +3,8 @@ from fastapi import APIRouter, HTTPException, Query
 
 import requests
 
-from ..servicios import sig_dem, sig_igac, sig_ndvi, sig_rusle
+from ..servicios import sig_cal, sig_dem, sig_igac, sig_ndvi, sig_rusle
+from ..servicios import lluvia_ideam as servicio_lluvia
 
 enrutador = APIRouter(prefix="/analisis", tags=["analisis"])
 
@@ -130,7 +131,7 @@ def rusle(
     longitud_m: float = Query(50.0, gt=0, le=1000),
     r: float = Query(3000.0, gt=0, description="Erosividad lluvia MJ·mm/ha·h·año (Andina ~3000)"),
     k: float = Query(0.03, gt=0, description="Erodabilidad t·ha·h/ha·MJ·mm (franco ~0.03)"),
-    practica: str = Query("sin_practicas", pattern="^(sin_practicas|curvas_nivel|terrazas|cobertura_permanente)$"),
+    practica: str = Query("sin_practicas", pattern="^(sin_practicas|curvas_nivel|terrazas|cobertura_permanente|bosque_restaurado)$"),
 ):
     """Pérdida de suelo RUSLE A=R·K·LS·C·P con la pendiente DEM del lote."""
     try:
@@ -142,5 +143,63 @@ def rusle(
         "pendiente_pct": pendiente_pct,
         **resultado,
         "insignia": "MIXTO",
-        "fuente": "DEM (LS) + ficha VSA/cobertura (C) + criterio técnico (R, K, P)",
+        "fuente": "Copernicus GLO-30 + ficha VSA de campo",
+    }
+
+
+@enrutador.get("/enmienda-cal")
+def enmienda_cal(
+    predio_identificador: str,
+    aluminio_cmol_kg: float = Query(..., ge=0),
+    cice_cmol_kg: float = Query(..., gt=0),
+    textura: str = Query("franco", pattern="^(arenoso|franco|arcilloso|limoso)$"),
+    al_tolerado_pct: float = Query(20.0, ge=0, le=100),
+):
+    """Dosis de cal dolomita (t/ha) según Al intercambiable, CICE y textura."""
+    try:
+        resultado = sig_cal.dosis_cal(aluminio_cmol_kg, cice_cmol_kg, textura, al_tolerado_pct)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {
+        "predio": predio_identificador,
+        "aluminio_cmol_kg": aluminio_cmol_kg,
+        "cice_cmol_kg": cice_cmol_kg,
+        "textura": textura,
+        **resultado,
+        "insignia": "MIXTO",
+        "fuente": sig_cal.FUENTE,
+    }
+
+
+@enrutador.get("/lluvia-ideam")
+def lluvia_ideam(
+    municipio: str,
+    lat: float | None = Query(None),
+    lng: float | None = Query(None),
+    modo: str = Query("real", pattern="^(real|demo)$"),
+):
+    """Lluvia anual + IMF de la estación IDEAM más cercana (datos, sin coeficientes R)."""
+    if not municipio.strip():
+        raise HTTPException(400, "El municipio es obligatorio")
+    if modo == "demo":
+        demo = dict(servicio_lluvia.DEMO)
+        return {
+            **demo,
+            "imf": servicio_lluvia.indice_fournier(demo["mensuales_mm"]),
+            "insignia": "MIXTO",
+            "fuente": f"{servicio_lluvia.FUENTE} (demo offline)",
+            "nota": "El factor R sigue editable: ningún coeficiente R-lluvia se inventa aquí.",
+        }
+    try:
+        estacion = servicio_lluvia.buscar_estacion(municipio, lat, lng)
+    except requests.RequestException as e:
+        raise HTTPException(502, f"IDEAM no disponible ahora, usa modo=demo o reintenta en oficina: {e}")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {
+        **estacion,
+        "imf": servicio_lluvia.indice_fournier(estacion["mensuales_mm"]),
+        "insignia": "MIXTO",
+        "fuente": servicio_lluvia.FUENTE,
+        "nota": "El factor R sigue editable: ningún coeficiente R-lluvia se inventa aquí.",
     }
