@@ -15,6 +15,8 @@ class DiagnosticoRespuesta(BaseModel):
     predio_identificador: str
     ficha_version: int
     hallazgos: list[Hallazgo]
+    puntaje_salud: dict | None = None
+    relaciones: dict | None = None
 
 
 class EstrategiaCrear(BaseModel):
