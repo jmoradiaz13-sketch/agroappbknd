@@ -129,3 +129,84 @@ def test_rusle_cobertura_baja_riesgo():
 def test_rusle_practica_invalida():
     r = cliente.get("/analisis/rusle", params={"predio_identificador": "a", "pendiente_pct": 10, "practica": "magia"})
     assert r.status_code == 422
+
+
+def test_rusle_bosque_restaurado():
+    r = cliente.get("/analisis/rusle", params={
+        "predio_identificador": "a", "pendiente_pct": 12, "cobertura_pct": 60,
+        "longitud_m": 50, "r": 3000, "k": 0.03, "practica": "bosque_restaurado",
+    })
+    assert r.status_code == 200
+    assert r.json()["factores"]["p"] == 0.1
+
+
+def test_enmienda_cal_requiere():
+    r = cliente.get("/analisis/enmienda-cal", params={
+        "predio_identificador": "a", "aluminio_cmol_kg": 2.0, "cice_cmol_kg": 8.0, "textura": "arcilloso",
+    })
+    assert r.status_code == 200
+    cuerpo = r.json()
+    # exceso = 2.0 - 20*8/100 = 0.4; dosis = 0.4*2.0 = 0.8
+    assert cuerpo["dosis_t_ha"] == 0.8
+    assert cuerpo["saturacion_al_pct"] == 25.0
+    assert cuerpo["aplicaciones"] == 1
+    assert "fuente" in cuerpo
+
+
+def test_enmienda_cal_fracciona_dosis_alta():
+    r = cliente.get("/analisis/enmienda-cal", params={
+        "predio_identificador": "a", "aluminio_cmol_kg": 5.0, "cice_cmol_kg": 8.0, "textura": "arcilloso",
+    })
+    cuerpo = r.json()
+    # exceso = 5.0-1.6 = 3.4; dosis = 6.8 -> 3 aplicaciones de 2.27
+    assert cuerpo["dosis_t_ha"] == 6.8
+    assert cuerpo["aplicaciones"] == 3
+    assert cuerpo["dosis_por_aplicacion_t_ha"] <= 2.5
+
+
+def test_enmienda_cal_no_requiere():
+    r = cliente.get("/analisis/enmienda-cal", params={
+        "predio_identificador": "a", "aluminio_cmol_kg": 0.5, "cice_cmol_kg": 10.0, "textura": "franco",
+    })
+    assert r.json()["clase"] == "no requiere"
+
+
+def test_enmienda_cal_cice_invalida():
+    r = cliente.get("/analisis/enmienda-cal", params={
+        "predio_identificador": "a", "aluminio_cmol_kg": 1.0, "cice_cmol_kg": 0, "textura": "franco",
+    })
+    assert r.status_code in (400, 422)
+
+
+def test_lluvia_ideam_demo():
+    r = cliente.get("/analisis/lluvia-ideam", params={"municipio": "Mosquera", "modo": "demo"})
+    assert r.status_code == 200
+    cuerpo = r.json()
+    assert cuerpo["anual_mm"] == 985.0
+    assert cuerpo["imf"] > 0
+    assert "R sigue editable" in cuerpo["nota"]
+
+
+def test_lluvia_ideam_sin_municipio_400():
+    r = cliente.get("/analisis/lluvia-ideam", params={"municipio": "  ", "modo": "demo"})
+    assert r.status_code == 400
+
+
+def test_indice_fournier_matematica():
+    from aplicacion.servicios import lluvia_ideam
+    mensuales = [100.0] * 12
+    assert lluvia_ideam.indice_fournier(mensuales) == 100.0
+
+
+def test_upra_frontera_demo():
+    r = cliente.get("/sig/upra-frontera", params={"municipio": "Mosquera", "modo": "demo"})
+    assert r.status_code == 200
+    cuerpo = r.json()
+    assert cuerpo["total_ha"] == 12703.0
+    assert "sipra.upra.gov.co" in cuerpo["aptitud_sipra"]
+    assert "indicativo" in cuerpo["nota"]
+
+
+def test_upra_frontera_sin_municipio_400():
+    r = cliente.get("/sig/upra-frontera", params={"municipio": "  ", "modo": "demo"})
+    assert r.status_code == 400

@@ -35,3 +35,24 @@ def test_catalogo_trazable():
     assert len(CATALOGO_RANGOS) >= 7
     for r in CATALOGO_RANGOS:
         assert r.fuente.endswith(".pdf cap. fertilidad") or ".pdf" in r.fuente
+
+
+def test_relaciones_cationicas_matematicas():
+    from aplicacion.servicios.motor_diagnostico import relaciones_cationicas
+    rel = relaciones_cationicas({
+        "calcio_cmol_kg": 6.0, "magnesio_cmol_kg": 2.0,
+        "potasio_cmol_kg": 0.5, "aluminio_cmol_kg": 1.0,
+    })
+    assert rel["ca_mg"] == 3.0
+    assert rel["mg_k"] == 4.0
+    assert rel["ca_mg_k"] == 16.0
+    assert rel["ca_al"] == 6.0
+    incompleta = relaciones_cationicas({"calcio_cmol_kg": 6.0})
+    assert incompleta["ca_mg"] is None and incompleta["mg_k"] is None
+
+
+def test_ficha_sin_sodio_duplicado_y_con_nuevos():
+    from aplicacion.modelos.ficha_suelo import FichaSuelo
+    columnas = [c.name for c in FichaSuelo.__table__.columns]
+    assert columnas.count("sodio_cmol_kg") == 1
+    assert "densidad_real" in columnas and "metodo_fosforo" in columnas

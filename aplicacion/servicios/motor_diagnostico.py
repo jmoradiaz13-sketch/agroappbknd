@@ -35,3 +35,27 @@ def diagnosticar(valores: dict) -> list[dict]:
             "referencia_bibliografica": rango.fuente,
         })
     return hallazgos
+
+
+def relaciones_cationicas(valores: dict) -> dict:
+    """Cocientes Ca/Mg, Mg/K, (Ca+Mg)/K y Ca/Al solo como valores informativos.
+
+    Sin clasificación de estado: los umbrales dependen del cultivo y se
+    interpretan con el manual del laboratorio (cero alucinación, §2.5).
+    """
+    def cociente(a, b):
+        if a is None or b is None or b == 0:
+            return None
+        return round(a / b, 2)
+
+    ca = valores.get("calcio_cmol_kg")
+    mg = valores.get("magnesio_cmol_kg")
+    k = valores.get("potasio_cmol_kg")
+    al = valores.get("aluminio_cmol_kg")
+    return {
+        "ca_mg": cociente(ca, mg),
+        "mg_k": cociente(mg, k),
+        "ca_mg_k": cociente((ca + mg) if ca is not None and mg is not None else None, k),
+        "ca_al": cociente(ca, al),
+        "nota": "Cocientes informativos en cmol/kg. Interpreta con tu manual según cultivo.",
+    }

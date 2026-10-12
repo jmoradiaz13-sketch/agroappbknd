@@ -14,12 +14,13 @@ K_POR_TEXTURA = {
     "limoso": 0.045,
 }
 
-# P por práctica de conservación.
+# P por práctica de conservación (AGENTS.md §4.2: 0.1 a 1.0).
 P_POR_PRACTICA = {
     "sin_practicas": 1.0,
     "curvas_nivel": 0.6,
     "terrazas": 0.4,
     "cobertura_permanente": 0.3,
+    "bosque_restaurado": 0.1,
 }
 
 

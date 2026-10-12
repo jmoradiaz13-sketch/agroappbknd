@@ -32,6 +32,7 @@ class FichaSuelo(Base):
     aluminio_cmol_kg = Column(Float, nullable=True)
     saturacion_al_pct = Column(Float, nullable=True)
     fosforo_mg_kg = Column(Float, nullable=True)
+    metodo_fosforo = Column(String(20), nullable=True)  # Bray II|Olsen|otro
     azufre_mg_kg = Column(Float, nullable=True)
     materia_organica_pct = Column(Float, nullable=True)
     nitrogeno_pct = Column(Float, nullable=True)
@@ -39,7 +40,6 @@ class FichaSuelo(Base):
     # Químico extendido MVP
     ph_agua = Column(Float, nullable=True)
     ph_kcl = Column(Float, nullable=True)
-    sodio_cmol_kg = Column(Float, nullable=True)
     cic_cmol_kg = Column(Float, nullable=True)
     hierro_mg_kg = Column(Float, nullable=True)
     manganeso_mg_kg = Column(Float, nullable=True)
@@ -54,6 +54,7 @@ class FichaSuelo(Base):
     estructura = Column(String(100), nullable=True)
     estructura_vess = Column(Integer, nullable=True)  # 1-5 Ball et al.
     densidad_aparente = Column(Float, nullable=True)
+    densidad_real = Column(Float, nullable=True)  # g/cm³ (picnómetro)
     porosidad_pct = Column(Float, nullable=True)
     capacidad_campo_pct = Column(Float, nullable=True)
     pmp_pct = Column(Float, nullable=True)
