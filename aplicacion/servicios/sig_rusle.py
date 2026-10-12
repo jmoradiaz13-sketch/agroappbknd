@@ -60,6 +60,23 @@ def clasificar_a(perdida: float) -> tuple[str, str]:
     return ("muy alta", "Riesgo crítico: cobertura permanente inmediata, sin laboreo. Restaura primero aquí.")
 
 
+# Nivel Plan Maestro (Bajo/Moderado/Severo/Crítico) + semáforo, sin romper `clase`.
+# Guardián contra la erosión: < 5 t/ha/año (insignia).
+FUENTE_RUSLE = "Copernicus GLO-30 + ficha VSA de campo (A = R·K·LS·C·P)"
+UMBRAL_GUARDIAN_T_HA_ANO = 5.0
+
+
+def nivel_riesgo(perdida: float) -> tuple[str, str]:
+    """Bajo <5, Moderado 5-15, Severo 15-50, Crítico >50. Colores en `semaforo`."""
+    if perdida < UMBRAL_GUARDIAN_T_HA_ANO:
+        return ("bajo", "verde")
+    if perdida < 15:
+        return ("moderado", "amarillo")
+    if perdida <= 50:
+        return ("severo", "naranja")
+    return ("critico", "rojo")
+
+
 def estimar(r: float, k: float, pendiente_pct: float, longitud_m: float, cobertura_pct: float, practica: str) -> dict:
     if r <= 0 or k <= 0:
         raise ValueError("R y K deben ser positivos")
@@ -70,9 +87,14 @@ def estimar(r: float, k: float, pendiente_pct: float, longitud_m: float, cobertu
     pe = P_POR_PRACTICA[practica]
     perdida = round(r * k * ls["ls"] * ce * pe, 1)
     clase, manejo = clasificar_a(perdida)
+    nivel, semaforo = nivel_riesgo(perdida)
     return {
         "perdida_t_ha_ano": perdida,
         "clase": clase,
         "manejo": manejo,
+        "nivel_riesgo": nivel,
+        "semaforo": semaforo,
+        "guardian_erosion": perdida < UMBRAL_GUARDIAN_T_HA_ANO,
+        "fuente": FUENTE_RUSLE,
         "factores": {"r": r, "k": k, **ls, "c": ce, "p": pe},
     }

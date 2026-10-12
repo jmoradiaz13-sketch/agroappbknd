@@ -7,7 +7,7 @@ from ..modelos.predio import Predio
 from ..modelos.ficha_suelo import FichaSuelo
 from ..modelos.estrategia import Estrategia
 from ..esquemas.diagnostico import DiagnosticoRespuesta, EstrategiaCrear
-from ..servicios.motor_diagnostico import diagnosticar
+from ..servicios.motor_diagnostico import diagnosticar, puntaje_salud, relaciones_cationicas
 
 enrutador = APIRouter(prefix="/diagnostico", tags=["diagnostico"])
 
@@ -24,6 +24,15 @@ def _ficha_a_valores(ficha: FichaSuelo) -> dict:
     }
 
 
+def _valores_relaciones(ficha: FichaSuelo) -> dict:
+    return {
+        "calcio_cmol_kg": ficha.calcio_cmol_kg,
+        "magnesio_cmol_kg": ficha.magnesio_cmol_kg,
+        "potasio_cmol_kg": ficha.potasio_cmol_kg,
+        "aluminio_cmol_kg": getattr(ficha, "aluminio_cmol_kg", None),
+    }
+
+
 @enrutador.get("/{identificador}/ultimo", response_model=DiagnosticoRespuesta)
 def ultimo_diagnostico(identificador: str, sesion: Session = Depends(obtener_sesion)):
     predio = sesion.query(Predio).filter_by(identificador=identificador).first()
@@ -35,10 +44,14 @@ def ultimo_diagnostico(identificador: str, sesion: Session = Depends(obtener_ses
     )
     if not ficha:
         raise HTTPException(404, "Sin fichas para este predio")
+    valores = _ficha_a_valores(ficha)
+    hallazgos = diagnosticar(valores)
     return {
         "predio_identificador": identificador,
         "ficha_version": ficha.version,
-        "hallazgos": diagnosticar(_ficha_a_valores(ficha)),
+        "hallazgos": hallazgos,
+        "puntaje_salud": puntaje_salud(hallazgos),
+        "relaciones": relaciones_cationicas(_valores_relaciones(ficha)),
     }
 
 

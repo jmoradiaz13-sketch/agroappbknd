@@ -59,3 +59,43 @@ def relaciones_cationicas(valores: dict) -> dict:
         "ca_al": cociente(ca, al),
         "nota": "Cocientes informativos en cmol/kg. Interpreta con tu manual según cultivo.",
     }
+
+
+FUENTE_SALUD = "guia_para_la_evaluacion_de_la_calidad_y_salud_del_suelo.pdf p.12-18"
+
+PUNTAJE_POR_ESTADO = {"optimo": 90.0, "deficiente": 40.0, "exceso": 50.0}
+
+
+def puntaje_salud(hallazgos: list[dict]) -> dict:
+    """Soil Health Score 0-100: promedio honesto de hallazgos normalizados.
+
+    No mezcla unidades (% vs mg/kg): cada parámetro aporta 0-100 según su
+    estado (óptimo 90, exceso 50, deficiente 40) y se promedia. Trazable a
+    FUENTE_SALUD. El técnico decide el manejo final.
+    """
+    if not hallazgos:
+        return {
+            "puntaje": 0,
+            "nivel": "sin-datos",
+            "detalle": "Sin parámetros con dato: registra la ficha de laboratorio.",
+            "n_optimo": 0,
+            "n_total": 0,
+            "fuente": FUENTE_SALUD,
+        }
+    puntos = [PUNTAJE_POR_ESTADO.get(h.get("estado"), 0.0) for h in hallazgos]
+    promedio = round(sum(puntos) / len(puntos))
+    n_optimo = sum(1 for h in hallazgos if h.get("estado") == "optimo")
+    if promedio >= 80:
+        nivel, detalle = "bueno", "Suelo sano y estructurado: mantén cobertura y rotación."
+    elif promedio >= 60:
+        nivel, detalle = "moderado", "Condición moderada: corrige los parámetros en rojo/amarillo."
+    else:
+        nivel, detalle = "pobre", "Condición pobre: prioriza MO, cal y cobertura antes de sembrar."
+    return {
+        "puntaje": promedio,
+        "nivel": nivel,
+        "detalle": detalle,
+        "n_optimo": n_optimo,
+        "n_total": len(hallazgos),
+        "fuente": FUENTE_SALUD,
+    }
