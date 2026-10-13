@@ -22,6 +22,20 @@ class FichaSuelo(Base):
     clima_reciente = Column(Text, nullable=True)
     profundidad_cm = Column(Float, nullable=True)
     laboratorio_observador = Column(String(200), nullable=True)
+    # Sitio de muestreo (Datos del terreno)
+    latitud = Column(Float, nullable=True)
+    longitud = Column(Float, nullable=True)
+    precision_m = Column(Float, nullable=True)
+    msnm = Column(Float, nullable=True)
+    pendiente_sitio_pct = Column(Float, nullable=True)
+    posicion_relieve = Column(String(50), nullable=True)  # cima|hombro|ladera|pie|valle
+    uso_actual = Column(String(200), nullable=True)
+    solicitante = Column(String(200), nullable=True)
+    tenencia_sitio = Column(String(50), nullable=True)  # propietario|arrendatario|poseedor|otro
+    manejo_reciente = Column(Text, nullable=True)
+    vereda = Column(String(100), nullable=True)
+    municipio = Column(String(100), nullable=True)
+    departamento = Column(String(100), nullable=True)
     metodo_campo = Column(String(20), nullable=True)  # VSA|DRES|PGPE|ninguno
     indice_calidad = Column(Float, nullable=True)
 

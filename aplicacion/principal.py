@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .configuracion import configuracion
 from .rutas import predios, fichas_suelo, analisis, diagnostico, informes, lotes, auth, referencias_monitoreo, disenos, fotos, sig, simulador, propietarios, puntos
 
-app = FastAPI(title="Surcos API", description="Gestión de fincas y suelos MAGNA-SIRGAS EPSG:4686", version="0.1.0")
+app = FastAPI(title="SurcAF API", description="Gestión de fincas y suelos MAGNA-SIRGAS EPSG:4686", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,4 +33,4 @@ app.include_router(puntos.enrutador)
 
 @app.get("/")
 def raiz():
-    return {"mensaje": "Surcos API lista", "docs": "/docs", "idioma": "es-CO"}
+    return {"mensaje": "SurcAF API lista", "docs": "/docs", "idioma": "es-CO"}

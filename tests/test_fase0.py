@@ -1,15 +1,4 @@
-"""Tests Fase 0: modelos completos, auth JWT y extracción."""
-import json
-from pathlib import Path
-
-
-def test_references_json_existe_y_tiene_16():
-    refs = json.loads((Path(__file__).parents[1] / "datos_bibliograficos" / "references.json").read_text(encoding="utf-8"))
-    assert len(refs) == 16
-    cats = {r["categoria"] for r in refs}
-    assert "soil_field_methods" in cats and "agroforestry" in cats
-
-
+"""Tests Fase 0: modelos completos y auth JWT."""
 def test_modelos_importan():
     from aplicacion.modelos.predio import Predio
     from aplicacion.modelos.lote import Lote

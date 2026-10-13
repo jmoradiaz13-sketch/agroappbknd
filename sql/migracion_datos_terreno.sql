@@ -1,0 +1,15 @@
+-- Sitio de muestreo (Datos del terreno).
+-- Idempotente: IF NOT EXISTS para correr en cualquier orden.
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS latitud DOUBLE PRECISION;
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS longitud DOUBLE PRECISION;
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS precision_m DOUBLE PRECISION;
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS msnm DOUBLE PRECISION;
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS pendiente_sitio_pct DOUBLE PRECISION;
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS posicion_relieve VARCHAR(50);
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS uso_actual VARCHAR(200);
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS solicitante VARCHAR(200);
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS tenencia_sitio VARCHAR(50);
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS manejo_reciente TEXT;
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS vereda VARCHAR(100);
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS municipio VARCHAR(100);
+ALTER TABLE fichas_suelo ADD COLUMN IF NOT EXISTS departamento VARCHAR(100);
