@@ -46,3 +46,40 @@ def test_motor_ignora_parametros_sin_rango():
     assert "azufre_mg_kg" not in parametros
     assert "materia_organica_pct" in parametros
     assert hallazgos[0]["estado"] == "deficiente"
+
+
+def test_sitio_muestreo_acepta_y_valida():
+    import pytest
+    from pydantic import ValidationError
+
+    ficha = FichaSueloCrear(
+        predio_identificador="finca-demo",
+        fecha="2026-01-15",
+        latitud=4.711,
+        longitud=-74.072,
+        precision_m=8.0,
+        msnm=1650.0,
+        pendiente_sitio_pct=12.0,
+        posicion_relieve="ladera",
+        uso_actual="cafetal",
+        solicitante="Productor demo",
+        tenencia_sitio="propietario",
+        manejo_reciente="Fertilización hace 3 meses",
+        vereda="El Mirador",
+        municipio="Tibasosa",
+        departamento="Boyacá",
+    )
+    assert ficha.uso_actual == "cafetal"
+    assert ficha.posicion_relieve == "ladera"
+    with pytest.raises(ValidationError):
+        FichaSueloCrear(
+            predio_identificador="finca-demo",
+            fecha="2026-01-15",
+            latitud=95.0,
+        )
+    with pytest.raises(ValidationError):
+        FichaSueloCrear(
+            predio_identificador="finca-demo",
+            fecha="2026-01-15",
+            posicion_relieve="cima_extrana",
+        )

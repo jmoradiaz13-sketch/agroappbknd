@@ -1,7 +1,7 @@
 """Motor del simulador: reglas de compatibilidad + escenarios A/B/C + proyección.
 
 Reglas + proyección simple (AGENTS.md §2.5): cada descarte cita su fuente
-del banco `datos_bibliograficos/`. Sin invención: lo no medido entra como
+registrada. Sin invención: lo no medido entra como
 supuesto explícito y editable.
 """
 from . import sig_rusle

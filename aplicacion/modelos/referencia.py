@@ -1,7 +1,7 @@
 """ReferenciaBibliografica: entidad de primera clase (prompt Opus).
 
 Cada recomendación debe vincularse a una o más referencias.
-Origen: datos_bibliograficos/references.json generado del script de extracción.
+Origen: registro manual curado (título, autores, fuente verificada).
 """
 from sqlalchemy import Column, Integer, String, Text, JSON, DateTime, func
 from ..base_datos import Base

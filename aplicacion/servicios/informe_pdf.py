@@ -22,10 +22,10 @@ def construir_html_informe(
         for h in hallazgos
     )
     return f"""<!doctype html><html lang="es-CO"><head><meta charset="utf-8">
-<title>Informe Surcos {predio_identificador} v{ficha_version}</title>
+<title>Informe SurcAF {predio_identificador} v{ficha_version}</title>
 <style>body{{font-family:sans-serif;margin:32px}}table{{border-collapse:collapse;width:100%}}
 td,th{{border:1px solid #555;padding:8px}}h1{{color:#2f6b2f}}</style></head><body>
-<h1>Surcos — Informe de finca {predio_identificador} (ficha v{ficha_version})</h1>
+<h1>SurcAF — Informe de finca {predio_identificador} (ficha v{ficha_version})</h1>
 <p>El técnico decide: este informe sugiere, el técnico acepta/rechaza/edita en campo.</p>
 <h2>Croquis del predio</h2>
 {mapa_svg}
