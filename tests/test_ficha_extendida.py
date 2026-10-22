@@ -48,6 +48,20 @@ def test_motor_ignora_parametros_sin_rango():
     assert hallazgos[0]["estado"] == "deficiente"
 
 
+def test_ficha_acepta_lote_opcional():
+    sin_lote = FichaSueloCrear(
+        predio_identificador="finca-demo",
+        fecha="2026-01-15",
+    )
+    con_lote = FichaSueloCrear(
+        predio_identificador="finca-demo",
+        lote_nombre="Lote El Mirador",
+        fecha="2026-01-15",
+    )
+    assert sin_lote.lote_nombre is None
+    assert con_lote.lote_nombre == "Lote El Mirador"
+
+
 def test_sitio_muestreo_acepta_y_valida():
     import pytest
     from pydantic import ValidationError

@@ -5,6 +5,8 @@ from pydantic import BaseModel, Field
 
 class FichaSueloCrear(BaseModel):
     predio_identificador: str = Field(min_length=1)
+    # Lote/parcela opcional dentro del predio.
+    lote_nombre: str | None = Field(default=None, max_length=200)
     fecha: date
     tipo_evaluacion: str | None = Field(default=None, pattern='^(campo|laboratorio|mixta)$')
     clima_reciente: str | None = Field(default=None, max_length=500)
