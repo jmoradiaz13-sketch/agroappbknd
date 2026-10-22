@@ -4,10 +4,20 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from ..base_datos import obtener_sesion
 from ..modelos.predio import Predio
+from ..modelos.lote import Lote
 from ..modelos.ficha_suelo import FichaSuelo
 from ..esquemas.ficha import FichaSueloCrear
 
 enrutador = APIRouter(prefix="/fichas-suelo", tags=["fichas-suelo"])
+
+
+def _lote_del_predio(sesion: Session, predio_id: int, nombre: str | None) -> Lote | None:
+    if not nombre:
+        return None
+    lote = sesion.query(Lote).filter_by(predio_id=predio_id, nombre=nombre).first()
+    if not lote:
+        raise HTTPException(422, f"Lote {nombre} no encontrado para el predio")
+    return lote
 
 
 @enrutador.post("/nueva-version")
@@ -15,9 +25,16 @@ def crear_nueva_version(datos: FichaSueloCrear, sesion: Session = Depends(obtene
     predio = sesion.query(Predio).filter_by(identificador=datos.predio_identificador).first()
     if not predio:
         raise HTTPException(404, f"Predio {datos.predio_identificador} no encontrado")
-    max_version = sesion.query(func.max(FichaSuelo.version)).filter_by(predio_id=predio.id).scalar() or 0
+    lote = _lote_del_predio(sesion, predio.id, datos.lote_nombre)
+    consulta_version = sesion.query(func.max(FichaSuelo.version)).filter_by(predio_id=predio.id)
+    consulta_version = (
+        consulta_version.filter_by(lote_id=lote.id)
+        if lote else consulta_version.filter(FichaSuelo.lote_id.is_(None))
+    )
+    max_version = consulta_version.scalar() or 0
     ficha = FichaSuelo(
         predio_id=predio.id,
+        lote_id=lote.id if lote else None,
         fecha=datos.fecha,
         version=max_version + 1,
         tipo_evaluacion=datos.tipo_evaluacion,
@@ -93,4 +110,9 @@ def crear_nueva_version(datos: FichaSueloCrear, sesion: Session = Depends(obtene
     sesion.add(ficha)
     sesion.commit()
     sesion.refresh(ficha)
-    return {"id": ficha.id, "version": ficha.version, "porque": f"Sugerencia trazada a {ficha.referencia_bibliografica}"}
+    return {
+        "id": ficha.id,
+        "version": ficha.version,
+        "lote_nombre": datos.lote_nombre,
+        "porque": f"Sugerencia trazada a {ficha.referencia_bibliografica or 'una ficha sin referencia registrada'}",
+    }

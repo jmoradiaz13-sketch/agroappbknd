@@ -97,5 +97,5 @@ class FichaSuelo(Base):
     micorrizas = Column(String(100), nullable=True)
     cobertura_vegetal_pct = Column(Float, nullable=True)
 
-    referencia_bibliografica = Column(String(300), nullable=False)
+    referencia_bibliografica = Column(String(300), nullable=True)
     creado_en = Column(DateTime(timezone=True), server_default=func.now())

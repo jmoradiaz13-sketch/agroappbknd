@@ -9,7 +9,10 @@ def test_modelos_importan():
     assert Lote.__tablename__ == "lotes"
     assert "propietario" in {c.name for c in Predio.__table__.columns}
     assert "uso_actual" in {c.name for c in Lote.__table__.columns}
-    assert "ph_agua" in {c.name for c in __import__("aplicacion.modelos.ficha_suelo", fromlist=["FichaSuelo"]).FichaSuelo.__table__.columns}
+    ficha = __import__("aplicacion.modelos.ficha_suelo", fromlist=["FichaSuelo"]).FichaSuelo
+    assert "ph_agua" in {c.name for c in ficha.__table__.columns}
+    assert "lote_id" in {c.name for c in ficha.__table__.columns}
+    assert ficha.__table__.columns.referencia_bibliografica.nullable is True
 
 
 def test_auth_token():

@@ -13,6 +13,7 @@ class Hallazgo(BaseModel):
 
 class DiagnosticoRespuesta(BaseModel):
     predio_identificador: str
+    lote_nombre: str | None = None
     ficha_version: int
     hallazgos: list[Hallazgo]
     puntaje_salud: dict | None = None
