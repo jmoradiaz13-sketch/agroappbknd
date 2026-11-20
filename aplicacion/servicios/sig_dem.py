@@ -1,21 +1,26 @@
-"""Servicio DEM Fase 2: pendiente real por muestreo de elevaciones (SRTM, sin richdem).
+"""Servicio DEM Fase 2: pendiente real con Copernicus GLO-30.
 
-Estrategia offline-first: en oficina (ONLINE) se muestrean elevaciones del
-DEM global sobre el bbox del lote; el resultado numérico (pendiente %) se
-guarda en el lote y viaja a campo offline. No se descarga el ráster completo.
+Estrategia offline-first: en oficina (ONLINE) se muestrean elevaciones de las
+teselas COG públicas de Copernicus sobre el bbox del lote; el resultado
+numérico (pendiente %) se guarda en el lote y viaja a campo offline. No se
+descarga el ráster completo: rasterio lee solo la ventana necesaria vía HTTP.
 Todo en español.
 """
 import math
 
-import requests
+import rasterio
+from rasterio.errors import RasterioError
 
 from ..configuracion import configuracion
 
-URL_ELEVACION = "https://api.opentopodata.org/v1/srtm90m"
-
-# Demo determinista (tests y campo sin red): desnivel 200 m en ~1,6 km.
 DEMO_PENDIENTE_PCT = 12.4
 DEMO_DESNIVEL_M = 200.0
+FUENTE_DEM = "Copernicus DEM GLO-30 (AWS Open Data) + ficha VSA de campo"
+RESOLUCION_DEM_M = 30
+
+
+class DemNoDisponible(RuntimeError):
+    """La tesela DEM no se pudo abrir o no tiene elevación válida."""
 
 
 def malla_bbox(bbox: tuple[float, float, float, float]) -> list[tuple[float, float]]:
@@ -66,24 +71,61 @@ def clasificar(pendiente_pct: float) -> tuple[str, str]:
     return ("empinado", "Cobertura permanente, sin laboreo. Prioriza restauración.")
 
 
+def _cuadrante(valor: float, positivo: str, negativo: str, ancho: int) -> str:
+    entero = math.floor(valor)
+    hemisferio = positivo if entero >= 0 else negativo
+    return f"{hemisferio}{abs(entero):0{ancho}d}_00"
+
+
+def nombre_tesela(lat: float, lon: float) -> str:
+    """Nombre de tesela Copernicus GLO-30 de 1°x1° que contiene el punto."""
+    lat_nombre = _cuadrante(lat, "N", "S", 2)
+    lon_nombre = _cuadrante(lon, "E", "W", 3)
+    return f"Copernicus_DSM_COG_10_{lat_nombre}_{lon_nombre}_DEM"
+
+
+def url_tesela(lat: float, lon: float) -> str:
+    nombre = nombre_tesela(lat, lon)
+    return f"{configuracion.copernicus_dem_url_base.rstrip('/')}/{nombre}/{nombre}.tif"
+
+
+def _elevaciones_copernicus(puntos: list[tuple[float, float]]) -> list[float]:
+    por_tesela: dict[str, list[tuple[int, float, float]]] = {}
+    for indice, (lat, lon) in enumerate(puntos):
+        por_tesela.setdefault(url_tesela(lat, lon), []).append((indice, lat, lon))
+
+    elevaciones: list[float | None] = [None] * len(puntos)
+    with rasterio.Env(
+        GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR",
+        GDAL_HTTP_TIMEOUT=str(max(10, configuracion.sig_tiempo_fuera_seg)),
+        GDAL_HTTP_MAX_RETRY="2",
+        GDAL_HTTP_RETRY_DELAY="1",
+    ):
+        for url, muestras in por_tesela.items():
+            try:
+                with rasterio.open(url) as dataset:
+                    nodata = dataset.nodata
+                    for indice, lat, lon in muestras:
+                        valor = float(next(dataset.sample([(lon, lat)]))[0])
+                        if (nodata is not None and valor == nodata) or not math.isfinite(valor):
+                            raise DemNoDisponible(f"DEM sin elevación válida en {lat}, {lon}")
+                        elevaciones[indice] = valor
+            except RasterioError as exc:
+                raise DemNoDisponible(f"No se pudo leer la tesela Copernicus GLO-30: {url}") from exc
+
+    if any(valor is None for valor in elevaciones):
+        raise DemNoDisponible("DEM devolvió muestras incompletas")
+    return [float(valor) for valor in elevaciones]
+
+
 def muestrear_dem(bbox: tuple[float, float, float, float]) -> dict:
-    """Muestrea SRTM vía OpenTopodata y estima pendiente. Lanza en error de red."""
+    """Muestrea Copernicus GLO-30 y estima pendiente. Lanza DemNoDisponible si falla."""
     puntos = malla_bbox(bbox)
-    ubicaciones = "|".join(f"{lat},{lon}" for lat, lon in puntos)
-    respuesta = requests.get(
-        URL_ELEVACION,
-        params={"locations": ubicaciones},
-        timeout=configuracion.sig_tiempo_fuera_seg,
-    )
-    respuesta.raise_for_status()
-    cuerpo = respuesta.json()
-    resultados = cuerpo.get("results", [])
-    if len(resultados) != len(puntos):
-        raise ValueError("DEM devolvió muestras incompletas")
-    elevaciones = []
-    for r in resultados:
-        h = r.get("elevation")
-        if h is None:
-            raise ValueError("DEM sin elevación en un punto (nubosidad/sombra del modelo)")
-        elevaciones.append(float(h))
-    return pendiente_desde_elevaciones(puntos, elevaciones)
+    elevaciones = _elevaciones_copernicus(puntos)
+    estimacion = pendiente_desde_elevaciones(puntos, elevaciones)
+    return {
+        **estimacion,
+        "resolucion_m": RESOLUCION_DEM_M,
+        "teselas": sorted({nombre_tesela(lat, lon) for lat, lon in puntos}),
+        "fuente": FUENTE_DEM,
+    }

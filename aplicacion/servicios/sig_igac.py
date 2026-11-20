@@ -8,21 +8,27 @@ from urllib.parse import urlencode
 
 from ..configuracion import configuracion
 
-# Capas permitidas: nombre lógico -> capa remota + tipo + descripción.
+# Capas permitidas: nombre lógico -> servicio remoto, capa y descripción.
+# Cada capa usa su propio servicio: nunca reutilizar la cartografía básica
+# de un municipio para presentarla como agrología o catastro.
 CAPAS_PERMITIDAS = {
     "agrologia": {
-        "titulo": "Agrología IGAC",
-        "capa_remota": "carto1000lavega25402000",
+        "titulo": "Agrología IGAC 1:100.000",
+        "capa_remota": "0",  # ArcGIS WMS usa el id numérico de la capa
+        "url_wms": "https://mapas.igac.gov.co/server/services/agrologia/suelosdecolombiaaniveldeorden/MapServer/WMSServer",
+        "url_rest": "https://mapas.igac.gov.co/server/rest/services/agrologia/suelosdecolombiaaniveldeorden/MapServer/0/query",
         "insignia": "MIXTO",
-        "fuente": "IGAC · Colombia en Mapas (WMS/WFS)",
-        "descripcion": "Clases agrológicas y aptitud de suelos por polígono.",
+        "fuente": "IGAC · Suelos y Tierras de Colombia 2016 (1:100.000)",
+        "descripcion": "Órdenes de suelos y correlación agrológica nacional.",
     },
     "predial": {
-        "titulo": "Predial y veredas",
-        "capa_remota": "carto1000lavega25402000",
+        "titulo": "Catastro rural IGAC",
+        "capa_remota": "1",  # R_TERRENO en Dato_Fundamental_Catastro
+        "url_wms": "https://mapas.igac.gov.co/server/services/Dato_Fundamental_Catastro/MapServer/WMSServer",
+        "url_rest": "https://mapas.igac.gov.co/server/rest/services/Dato_Fundamental_Catastro/MapServer/1/query",
         "insignia": "MIXTO",
-        "fuente": "IGAC · Geoportal / Catastro",
-        "descripcion": "Límites prediales, veredas y municipios de referencia.",
+        "fuente": "IGAC · Dato Fundamental Catastro (R_TERRENO)",
+        "descripcion": "Terrenos rurales catastrales; cobertura parcial según municipio.",
     },
 }
 
@@ -74,33 +80,46 @@ def url_wms_getmap(capa: str, bbox: tuple[float, float, float, float], ancho: in
     info = CAPAS_PERMITIDAS[capa]
     params = {
         "service": "WMS",
-        "version": "1.3.0",
+        "version": "1.1.1",
         "request": "GetMap",
         "layers": info["capa_remota"],
         "styles": "",
-        "crs": "EPSG:4326",
-        "bbox": f"{bbox[1]},{bbox[0]},{bbox[3]},{bbox[2]}",
+        "srs": "EPSG:4326",
+        # WMS 1.1.1 usa siempre orden lon,lat.
+        "bbox": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
         "width": str(ancho),
         "height": str(alto),
         "format": "image/png",
         "transparent": "true",
     }
-    return f"{configuracion.igac_wms_base}?{urlencode(params)}"
+    return f"{info['url_wms']}?{urlencode(params)}"
+
+
+def url_rest_getfeature(capa: str, bbox: tuple[float, float, float, float]) -> str:
+    """Construye una consulta ArcGIS REST acotada al bbox (GeoJSON).
+
+    IGAC publica estos servicios como MapServer de ArcGIS; sus WFS no
+    aceptan GeoJSON. La consulta REST sí devuelve ``f=geojson`` y respeta
+    el SRID del cliente (WGS84).
+    """
+    info = CAPAS_PERMITIDAS[capa]
+    params = {
+        "where": "1=1",
+        "geometry": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
+        "geometryType": "esriGeometryEnvelope",
+        "spatialRel": "esriSpatialRelIntersects",
+        "inSR": "4326",
+        "outSR": "4326",
+        "outFields": "*",
+        "returnGeometry": "true",
+        "f": "geojson",
+    }
+    return f"{info['url_rest']}?{urlencode(params)}"
 
 
 def url_wfs_getfeature(capa: str, bbox: tuple[float, float, float, float]) -> str:
-    """Construye URL WFS GetFeature para descarga vectorial recortada (precarga)."""
-    info = CAPAS_PERMITIDAS[capa]
-    params = {
-        "service": "WFS",
-        "version": "1.0.0",
-        "request": "GetFeature",
-        "typeName": info["capa_remota"],
-        "outputFormat": "application/json",
-        "srsName": "EPSG:4326",
-        "bbox": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
-    }
-    return f"{configuracion.igac_wfs_base}?{urlencode(params)}"
+    """Alias de compatibilidad: la precarga usa la consulta REST de ArcGIS."""
+    return url_rest_getfeature(capa, bbox)
 
 
 def plan_precarga(predio_identificador: str, bbox: tuple[float, float, float, float], capas: list[str]) -> dict:

@@ -18,5 +18,5 @@ def test_modelos_importan():
 def test_auth_token():
     from aplicacion.rutas.auth import crear_token, SECRETO, ALGORITMO
     from jose import jwt
-    t = crear_token("tecnico")
-    assert jwt.decode(t, SECRETO, algorithms=[ALGORITMO])["sub"] == "tecnico"
+    t = crear_token("técnico")
+    assert jwt.decode(t, SECRETO, algorithms=[ALGORITMO])["sub"] == "técnico"
