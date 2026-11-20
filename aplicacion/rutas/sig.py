@@ -51,7 +51,7 @@ def geojson_igac(
     bbox: str = Query(...),
     modo: str = Query("real", pattern="^(real|demo)$"),
 ):
-    """Proxy WFS: descarga vector recortado para precarga. modo=demo sin red (tests/campo)."""
+    """Proxy REST ArcGIS: descarga GeoJSON recortado para precarga. modo=demo sin red (tests/campo)."""
     if capa not in sig_igac.CAPAS_PERMITIDAS:
         raise HTTPException(400, f"capa '{capa}' no permitida. Usa: {sorted(sig_igac.CAPAS_PERMITIDAS)}")
     try:
@@ -68,7 +68,11 @@ def geojson_igac(
         }
     url = sig_igac.url_wfs_getfeature(capa, caja)
     try:
-        respuesta = requests.get(url, timeout=configuracion.sig_tiempo_fuera_seg)
+        respuesta = requests.get(
+            url,
+            timeout=configuracion.sig_tiempo_fuera_seg,
+            headers={"User-Agent": "SurcAF/1.0 (SIG offline-first)"},
+        )
         respuesta.raise_for_status()
         datos = respuesta.json()
     except requests.RequestException as e:

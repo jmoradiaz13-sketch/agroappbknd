@@ -10,8 +10,14 @@ BBOX = "-74.06,4.63,-74.03,4.66"
 def test_listar_capas():
     r = cliente.get("/sig/capas")
     assert r.status_code == 200
-    ids = {c["id"] for c in r.json()["capas"]}
-    assert {"agrologia", "predial"} <= ids
+    capas = {c["id"]: c for c in r.json()["capas"]}
+    assert {"agrologia", "predial"} <= set(capas)
+    # Cada capa debe venir de su propio servicio, nunca de la cartografía
+    # básica de La Vega ni compartir la misma capa remota.
+    assert "carto1000lavega" not in capas["agrologia"]["url_wms"]
+    assert "carto1000lavega" not in capas["predial"]["url_wms"]
+    assert capas["agrologia"]["url_wms"] != capas["predial"]["url_wms"]
+    assert capas["agrologia"]["capa_remota"] != capas["predial"]["capa_remota"]
 
 
 def test_geojson_demo_sin_red():
@@ -33,9 +39,30 @@ def test_geojson_bbox_fuera_colombia():
 
 
 def test_mapa_wms_construye_url():
-    r = cliente.get("/sig/igac/mapa", params={"capa": "predial", "bbox": BBOX})
-    assert r.status_code == 200
-    assert "url_wms" in r.json()
+    agrologia = cliente.get("/sig/igac/mapa", params={"capa": "agrologia", "bbox": BBOX})
+    predial = cliente.get("/sig/igac/mapa", params={"capa": "predial", "bbox": BBOX})
+    assert agrologia.status_code == 200
+    assert predial.status_code == 200
+    url_agrologia = agrologia.json()["url_wms"]
+    url_predial = predial.json()["url_wms"]
+    assert "suelosdecolombiaaniveldeorden" in url_agrologia
+    assert "Dato_Fundamental_Catastro" in url_predial
+    assert "layers=0" in url_agrologia
+    assert "layers=1" in url_predial
+    assert "version=1.1.1" in url_agrologia and "srs=EPSG%3A4326" in url_agrologia
+    assert "carto1000lavega" not in url_agrologia + url_predial
+
+
+def test_rest_igac_por_capa_y_geojson():
+    from aplicacion.servicios import sig_igac
+
+    caja = sig_igac.validar_bbox(BBOX)
+    url_agrologia = sig_igac.url_rest_getfeature("agrologia", caja)
+    url_predial = sig_igac.url_rest_getfeature("predial", caja)
+    assert "suelosdecolombiaaniveldeorden/MapServer/0/query" in url_agrologia
+    assert "Dato_Fundamental_Catastro/MapServer/1/query" in url_predial
+    assert "f=geojson" in url_agrologia and "f=geojson" in url_predial
+    assert "carto1000lavega" not in url_agrologia + url_predial
 
 
 def test_precarga_ok_y_cabe():
@@ -210,3 +237,110 @@ def test_upra_frontera_demo():
 def test_upra_frontera_sin_municipio_400():
     r = cliente.get("/sig/upra-frontera", params={"municipio": "  ", "modo": "demo"})
     assert r.status_code == 400
+
+
+def test_dem_copernicus_tesela_y_url():
+    from aplicacion.servicios import sig_dem
+
+    assert sig_dem.nombre_tesela(4.645, -74.045) == "Copernicus_DSM_COG_10_N04_00_W075_00_DEM"
+    assert sig_dem.nombre_tesela(-3.2, -70.4) == "Copernicus_DSM_COG_10_S04_00_W071_00_DEM"
+    url = sig_dem.url_tesela(4.645, -74.045)
+    assert url.endswith("Copernicus_DSM_COG_10_N04_00_W075_00_DEM/Copernicus_DSM_COG_10_N04_00_W075_00_DEM.tif")
+    assert "copernicus-dem-30m" in url
+
+
+def test_dem_copernicus_muestreo_real_sin_red(monkeypatch):
+    from aplicacion.servicios import sig_dem
+
+    monkeypatch.setattr(
+        sig_dem,
+        "_elevaciones_copernicus",
+        lambda puntos: [2600.0, 2600.0, 2600.0, 2600.0, 2400.0, 2600.0, 2600.0, 2600.0, 2600.0],
+    )
+    estimado = sig_dem.muestrear_dem((-74.06, 4.63, -74.03, 4.66))
+    assert 5 < estimado["pendiente_pct"] < 25
+    assert estimado["resolucion_m"] == 30
+    assert estimado["teselas"] == ["Copernicus_DSM_COG_10_N04_00_W075_00_DEM"]
+    assert "Copernicus DEM GLO-30" in estimado["fuente"]
+
+
+def test_ndvi_real_sin_credenciales_503(monkeypatch):
+    from aplicacion.configuracion import configuracion
+
+    monkeypatch.setattr(configuracion, "copernicus_id_cliente", None)
+    monkeypatch.setattr(configuracion, "copernicus_secreto_cliente", None)
+    r = cliente.get("/analisis/ndvi-serie", params={"predio_identificador": "a", "bbox": BBOX})
+    assert r.status_code == 503
+    assert "COPERNICUS" in r.json()["detail"]
+
+
+def test_ndvi_cuerpo_estadisticas():
+    from aplicacion.servicios import sig_ndvi
+
+    cuerpo = sig_ndvi.cuerpo_estadisticas((-74.06, 4.63, -74.03, 4.66), "2026-04-01", "2026-10-01")
+    assert cuerpo["input"]["bounds"]["bbox"] == [-74.06, 4.63, -74.03, 4.66]
+    assert cuerpo["input"]["data"][0]["type"] == "sentinel-2-l2a"
+    assert cuerpo["aggregation"]["aggregationInterval"] == {"of": "P30D"}
+    assert "NDVI" not in cuerpo["aggregation"]["evalscript"]
+    assert "B08" in cuerpo["aggregation"]["evalscript"]
+
+
+def test_ndvi_serie_real_parsea(monkeypatch):
+    import requests
+
+    from aplicacion.configuracion import configuracion
+    from aplicacion.servicios import sig_ndvi
+
+    class Respuesta:
+        def __init__(self, cuerpo):
+            self._cuerpo = cuerpo
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return self._cuerpo
+
+    def post_falso(url, **kwargs):
+        if "token" in url:
+            return Respuesta({"access_token": "token-prueba"})
+        return Respuesta(
+            {
+                "data": [
+                    {
+                        "interval": {"from": "2026-08-01T00:00:00Z", "to": "2026-08-31T00:00:00Z"},
+                        "outputs": [
+                            {
+                                "bands": [
+                                    {"stats": {"mean": 0.22, "sampleCount": 90}},
+                                    {"stats": {"mean": 0.05, "sampleCount": 90}},
+                                ]
+                            }
+                        ],
+                    },
+                    {
+                        "interval": {"from": "2026-09-01T00:00:00Z", "to": "2026-09-30T00:00:00Z"},
+                        "outputs": [
+                            {
+                                "bands": [
+                                    {"stats": {"mean": 0.64, "sampleCount": 80}},
+                                    {"stats": {"mean": 0.4, "sampleCount": 80}},
+                                ]
+                            }
+                        ],
+                    },
+                ]
+            }
+        )
+
+    monkeypatch.setattr(configuracion, "copernicus_id_cliente", "id")
+    monkeypatch.setattr(configuracion, "copernicus_secreto_cliente", "secreto")
+    monkeypatch.setattr(sig_ndvi.requests, "post", post_falso)
+    resultado = sig_ndvi.serie_real((-74.06, 4.63, -74.03, 4.66))
+    puntos = resultado["puntos"]
+    assert [p["ndvi"] for p in puntos] == [0.22, 0.64]
+    assert puntos[0]["clase"] == "suelo/estrés"
+    assert puntos[1]["clase"] == "vigoroso"
+    assert puntos[1]["nubosidad_pct"] == 40
+    assert "Sentinel-2" in resultado["fuente"]
+    assert sig_ndvi.interpretar_serie(puntos)["tendencia"] == "al alza"

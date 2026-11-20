@@ -1,4 +1,4 @@
-"""Análisis espacial MIXTO/ONLINE: DEM→pendiente/RUSLE, IGAC, NDVI (MVP manual)."""
+"""Análisis espacial MIXTO/ONLINE: DEM Copernicus, RUSLE, IGAC y NDVI Sentinel-2."""
 from fastapi import APIRouter, HTTPException, Query
 
 import requests
@@ -15,7 +15,7 @@ def pendiente_rusle(
     pendiente_pct: float | None = Query(None, ge=0, le=200),
     bbox: str | None = Query(None),
 ):
-    """Clasifica pendiente por lote y orienta manejo. Fase 2 calculará con DEM."""
+    """Clasifica pendiente por lote y orienta manejo; complementa el DEM real."""
     if bbox:
         try:
             sig_igac.validar_bbox(bbox)
@@ -30,7 +30,7 @@ def pendiente_rusle(
                 {"rango": "7–25 %", "manejo": "Ondulado · curvas a nivel y cobertura"},
                 {"rango": "> 25 %", "manejo": "Empinado · cobertura permanente, no laboreo"},
             ],
-            "nota": "Registra pendiente_pct del lote o precarga DEM Copernicus GLO-30 en /sig/precarga. RUSLE completo en Fase 2.",
+            "nota": "Registra pendiente_pct del lote o calcula el DEM Copernicus GLO-30 en /analisis/pendiente-dem.",
         }
     if pendiente_pct < 7:
         clase, manejo = "plano", "Mecanizable. Profundiza ficha física (VESS + densidad)."
@@ -59,7 +59,7 @@ def pendiente_dem(
     bbox: str = Query(...),
     modo: str = Query("real", pattern="^(real|demo)$"),
 ):
-    """Pendiente DEM real por muestreo SRTM (oficina ONLINE). modo=demo sin red."""
+    """Pendiente real con Copernicus GLO-30 (oficina ONLINE). modo=demo sin red."""
     try:
         caja = sig_igac.validar_bbox(bbox)
     except ValueError as e:
@@ -81,7 +81,9 @@ def pendiente_dem(
     try:
         estimacion = sig_dem.muestrear_dem(caja)
     except requests.RequestException as e:
-        raise HTTPException(502, f"DEM no disponible ahora, usa modo=demo o reintenta en oficina: {e}")
+        raise HTTPException(502, f"DEM no disponible ahora, reintenta en oficina: {e}")
+    except sig_dem.DemNoDisponible as e:
+        raise HTTPException(502, f"DEM Copernicus no disponible: {e}")
     except ValueError as e:
         raise HTTPException(502, str(e))
     clase, manejo = sig_dem.clasificar(estimacion["pendiente_pct"])
@@ -92,7 +94,6 @@ def pendiente_dem(
         "clase": clase,
         "manejo": manejo,
         "insignia": "MIXTO",
-        "fuente": "SRTM 90m vía OpenTopodata + ficha VSA de campo",
     }
 
 
@@ -100,9 +101,9 @@ def pendiente_dem(
 def ndvi_serie(
     predio_identificador: str,
     bbox: str = Query(...),
-    modo: str = Query("demo", pattern="^(real|demo)$"),
+    modo: str = Query("real", pattern="^(real|demo)$"),
 ):
-    """Serie temporal NDVI por lote. Sin credenciales Copernicus, usa modo=demo."""
+    """Serie temporal NDVI Sentinel-2 real; modo=demo queda solo para pruebas."""
     try:
         caja = sig_igac.validar_bbox(bbox)
     except ValueError as e:
@@ -115,12 +116,25 @@ def ndvi_serie(
             "puntos": serie,
             "interpretacion": sig_ndvi.interpretar_serie(serie),
             "insignia": "ONLINE",
-            "fuente": "Sentinel-2 demo offline (sin red). Real: Copernicus L2A en oficina.",
+            "fuente": "Sentinel-2 demo offline (sin red).",
         }
-    raise HTTPException(
-        502,
-        "Serie satelital real requiere credenciales Copernicus en oficina. Usa modo=demo o precarga la última serie.",
-    )
+    try:
+        resultado = sig_ndvi.serie_real(caja)
+    except sig_ndvi.CredencialesFaltantes as e:
+        raise HTTPException(503, str(e))
+    except requests.RequestException as e:
+        raise HTTPException(502, f"Copernicus no disponible ahora, reintenta en oficina: {e}")
+    except ValueError as e:
+        raise HTTPException(502, str(e))
+    return {
+        "predio": predio_identificador,
+        "bbox_wgs84": list(caja),
+        "puntos": resultado["puntos"],
+        "interpretacion": sig_ndvi.interpretar_serie(resultado["puntos"]),
+        "periodo": {"desde": resultado["desde"], "hasta": resultado["hasta"]},
+        "insignia": "ONLINE",
+        "fuente": resultado["fuente"],
+    }
 
 
 @enrutador.get("/rusle")

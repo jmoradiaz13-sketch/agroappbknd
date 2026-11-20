@@ -16,7 +16,7 @@ MINUTOS_EXPIRA = 480
 
 # Usuario único técnico (MVP sin bcrypt para evitar passlib/bcrypt Windows).
 # En producción mover a tabla + hash argon2.
-USUARIO_TECNICO = os.getenv("USUARIO_TECNICO", "tecnico")
+USUARIO_TECNICO = os.getenv("USUARIO_TECNICO", "técnico")
 CLAVE_TECNICO = os.getenv("CLAVE_TECNICO", "campo123")
 
 
